@@ -2,11 +2,17 @@
   (:use
    #:coalton
    #:coalton-prelude
-   #:cot)
+   #:cot
+   #:cot/classes
+   #:cot/base)
   (:local-nicknames
    (#:tb #:cot/termbox)
+   (#:str #:coalton-library/string)
    (#:list #:coalton-library/list))
   (:export
+   #:TextBox
+   #:textbox-backspace
+   #:textbox-insert
    #:Selection
    #:selection-down
    #:selection-up
@@ -15,6 +21,33 @@
 (in-package #:cot/extras)
 
 (coalton-toplevel
+  (derive Default)
+  (define-struct TextBox
+    (border Border)
+    (content String))
+
+  (declare textbox-backspace (TextBox -> TextBox))
+  (define (textbox-backspace tb)
+    (TextBox (.border tb)
+             (str:substring (.content tb)
+                            0
+                            (unwrap
+                             (tryinto
+                              (max 0
+                                   (1- (the Integer (into (str:length (.content tb)))))))))))
+
+  (declare textbox-insert (TextBox -> Char -> TextBox))
+  (define (textbox-insert tb ch)
+    (TextBox (.border tb)
+             (str:concat (.content tb) (into ch))))
+
+  (define-instance (Drawable TextBox)
+    (define (draw bounds tb)
+      (draw bounds (Frame (.border tb) (.content tb))))))
+
+(coalton-toplevel
+  (define *selected-style* (Style 5 0 (Some #x02000000)))
+
   (define-struct (Selection :t)
     (choices (List :t))
     (printer (:t -> String))
@@ -43,14 +76,27 @@
   (define-instance (Drawable (Selection :t))
     (define (draw bounds sel)
       (let (Bounds (Point x y) (Dimensions w h)) = bounds)
-      (rec f ((choices (.choices sel)) (i 0))
+      (rec f ((choices (.choices sel)) (i (Point 0 0)))
         (match (head choices)
           ((Some choice)
-           (tb:print x
-                     (+ i y)
-                     (if (== i (.cursor sel)) 5 0)
-                     0
-                     (lisp String (i choice) (cl:format cl:nil "~A> ~A" i choice)))
-           (f (unwrap (tail choices)) (1+ i)))
+           (let iy = (.y i))
+           (let choice-str = ((.printer sel) choice))
+           (printb bounds
+                   i
+                   (if (== (.y i) (.cursor sel)) *selected-style* (default))
+                   (lisp String (iy choice-str)
+                     (cl:format cl:nil "~A> ~A" iy choice-str)))
+           (f (unwrap (tail choices)) (+ i (Point 0 1))))
           ((None)
-           Unit))))))
+           Unit)))))
+
+  (define-instance (Centerable (Selection :t))
+    (define (compute-dimensions sel)
+      (Dimensions
+       (into 
+        (+ 4 (reduce max 0
+                     (map coalton-library/string:length
+                          (map (fn (x) ((.printer sel) x))
+                               (.choices sel))))))
+       (into (length (.choices sel)))
+       ))))
