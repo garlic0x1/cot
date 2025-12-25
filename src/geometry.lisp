@@ -11,16 +11,13 @@
    #:Bounds                             ; STRUCT
    #:Corners                            ; STRUCT
    #:bounds-corners                     ; FUNCTION
+   #:points-bounds                      ; FUNCTION
    #:positivize-bounds                  ; FUNCTION
    #:contains?                          ; FUNCTION
-   #:VSplittable                        ; CLASS
-   #:HSplittable                        ; CLASS
-   #:vsplit-split                       ; METHOD
-   #:hsplit-split                       ; METHOD
    #:vsplit-ratio                       ; FUNCTION
    #:hsplit-ratio                       ; FUNCTION
-   #:vsplit-int                       ; FUNCTION
-   #:hsplit-int                       ; FUNCTION
+   #:vsplit-int                         ; FUNCTION
+   #:hsplit-int                         ; FUNCTION
    ))
 
 (in-package #:cot/geometry)
@@ -82,6 +79,12 @@
     (let sw = (Point x (+ y h)))
     (let se = (Point (+ x w) (+ y h)))
     (Corners nw ne sw se))
+
+  (declare points-bounds (Point -> Point -> Bounds))
+  (define (points-bounds (Point ax ay) (Point bx by))
+    (let p = (Point (min ax bx) (min ay by)))
+    (let d = (Dimensions (- (max ax bx) (.x p)) (- (max ay by) (.y p))))
+    (Bounds p d))
 
   ;; https://english.stackexchange.com/a/253797
   (declare positivize-bounds (Bounds -> Bounds))
@@ -249,27 +252,3 @@
        (let left = (Bounds p (Dimensions split h)))
        (let right = (Bounds (+ p (Point split 0)) (Dimensions (- w split) h)))
        (Tuple left right)))))
-
-(coalton-toplevel
-  (define-class (VSplittable :split)
-    (vsplit-split (Bounds -> :split -> (Tuple Bounds Bounds))))
-
-  (define-instance (VSplittable Fraction)
-    (define (vsplit-split b s)
-      (vsplit-ratio b s)))
-
-  (define-instance (VSplittable Integer)
-    (define (vsplit-split b s)
-      (vsplit-int b s))))
-
-(coalton-toplevel
-  (define-class (HSplittable :split)
-    (hsplit-split (Bounds -> :split -> (Tuple Bounds Bounds))))
-
-  (define-instance (HSplittable Fraction)
-    (define (hsplit-split b s)
-      (hsplit-ratio b s)))
-
-  (define-instance (HSplittable Integer)
-    (define (hsplit-split b s)
-      (hsplit-int b s))))

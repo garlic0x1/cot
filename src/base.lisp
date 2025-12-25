@@ -18,6 +18,7 @@
    #:Dimensions
    #:Bounds
    #:printb
+   #:printvb
    #:set-cell
    #:set-cells
    ))
@@ -78,6 +79,20 @@
          (when (contains? bounds pp)
            (print pp style (str:substring line 0 (the UFix (unwrap (tryinto w)))))
            (f (unwrap (tail lines)) (+ i (Point 0 1)))))
-        ((None) Unit)))))
+        ((None) Unit))))
+
+  (declare printvb (Bounds -> Point -> Style -> String -> Unit))
+  (define (printvb bounds pnt style str)
+    (let (Bounds bp (Dimensions _ h)) = bounds)
+    (let lines = (lisp (List String) (str) (ppcre:split "\\n" str)))
+    (rec f ((lines lines) (i (Point 0 0)))
+      (let pp = (+ i (+ bp pnt)))
+      (match (head lines)
+        ((Some line)
+         (when (contains? bounds pp)
+           (print pp style (str:substring line 0 (the UFix (unwrap (tryinto h)))))
+           (f (unwrap (tail lines)) (+ i (Point 1 0)))))
+        ((None) Unit))))
+  )
 
 

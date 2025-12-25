@@ -226,12 +226,12 @@
   (declare current-width (Unit -> Integer))
   (define (current-width)
     (lisp Integer ()
-      (tb:tb-width)))
+      (cl:1- (tb:tb-width))))
 
   (declare current-height (Unit -> Integer))
   (define (current-height)
     (lisp Integer ()
-      (tb:tb-height)))
+      (cl:1- (tb:tb-height))))
 
   (declare clear (Integer -> Integer -> (Result TBError Unit)))
   (define (clear fg bg)

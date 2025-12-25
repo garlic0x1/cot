@@ -1,0 +1,72 @@
+#+TITLE: The Coalton Omnipotent TUI
+#+AUTHOR: garlic0x1
+
+* Overview
+
+I am just doodling around functional TUI ideas, I have built a small
+game with this for personal use.
+
+* Concepts
+
+Components implement the ~Drawable~ class with a function that accepts
+a bounds to draw within, and container components recursively call
+~draw~ on their children.
+
+* Examples
+
+Some basic examples are included in [[./example.lisp]], and you can try
+them with ~make example && ./example.exe~
+
+#+begin_src lisp
+  (Frame
+   (Border (Modeline "Example 1 - Basic Layout")
+           (Modeline "<Space> - Cycle : <q> - Quit")
+           (Margin 0)
+           (Margin 0))
+   (HSplit
+    (the Integer 16)
+    (Centered "16 chars wide")
+    (VSplitLine
+     1/3
+     (Centered "1/3rd of vertical space")
+     (Centered "rest of space"))))
+#+end_src
+
+[[./screenshots/example-1.png]]
+
+#+begin_src lisp
+  (Frame
+   (Border (Modeline "Example 2 - Negative Layout")
+           (Modeline "<Space> - Cycle : <q> - Quit")
+           (Margin 0)
+           (Margin 0))
+   (HSplit
+    (the Integer -20)
+    (VSplitLine
+     -1/5
+     (Centered "rest of space")
+     (Centered "1/5th from bottom"))
+    (Centered "20 from right")))
+#+end_src
+
+[[./screenshots/example-2.png]]
+
+#+begin_src lisp
+  (Frame
+   (Border (Modeline "Example 3 - Overlapping Layout")
+           (Modeline "<Space> - Cycle : <q> - Quit")
+           (Margin 0)
+           (Margin 0))
+   (Overlapping
+    (Frame
+     (Border (Margin 8) (Margin 8) (Margin 8) (Margin 8))
+     (OpaqueFrame (Border (Modeline "Modal") Line Line Line)
+                  (Centered "OpaqueFrame covers the rest!")))
+    (VSplit 1/2
+            (Centered "TOP TEXT")
+            (Frame (Border Line Line Line Line)
+                   "BOTTOM TEXT"))))
+#+end_src
+
+[[./screenshots/example-3.png]]
+

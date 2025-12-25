@@ -14,9 +14,10 @@
   (:export
    #:Frame
    #:OpaqueFrame
+   #:Line
+   #:Modeline
+   #:Margin
    #:Border
-   #:LineBorder
-   #:MarginBorder
    #:VSplit
    #:VSplitLine
    #:HSplit
@@ -26,44 +27,91 @@
 
 (in-package #:cot)
 
+;;;
+;;;- Frame
+;;;
+
 (coalton-toplevel
-  (define-type Border
-    (LineBorder Boolean Boolean Boolean Boolean)
-    (MarginBorder Integer Integer Integer Integer))
+  (define-type BorderEdge
+    Line
+    (Modeline String)
+    (Margin Integer))
+
+  (declare line-edge-p (BorderEdge -> Boolean))
+  (define (line-edge-p edge)
+    (match edge
+      ((Margin _) False)
+      (_ True)))
+
+  (declare edge-width (BorderEdge -> Integer))
+  (define (edge-width edge)
+    (match edge
+      ((Margin x) x)
+      (_ 1)))
+
+  (define-struct Border
+    (north BorderEdge)
+    (south BorderEdge)
+    (east  BorderEdge)
+    (west  BorderEdge))
 
   (define-instance (Default Border)
     (define (default)
-      (LineBorder True True True True)))
+      (Border Line Line Line Line)))
 
   (define-instance (Drawable Border)
-    (define (draw bounds border)
-      (match border
-        ((MarginBorder _ _ _ _)
-         Unit)
-        ((LineBorder n s e w)
-         (let (Corners nw ne sw se) = (bounds-corners bounds))
-         (when n (set-cells nw ne (default) +bar-h+))
-         (when s (set-cells sw se (default) +bar-h+))
-         (when e (set-cells ne se (default) +bar-v+))
-         (when w (set-cells nw sw (default) +bar-v+))
-         (when (and n w) (set-cell nw (default) +elbow-nw+))
-         (when (and s w) (set-cell sw (default) +elbow-sw+))
-         (when (and n e) (set-cell ne (default) +elbow-ne+))
-         (when (and s e) (set-cell se (default) +elbow-se+))))))
+    (define (draw bounds (Border n s e w))
+      (let (Corners nw ne sw se) = (bounds-corners bounds))
+      (match n
+        ((Line)
+         (set-cells nw ne (default) +bar-h+))
+        ((Modeline str)
+         (set-cells nw ne (default) +bar-h+)
+         (printb (points-bounds nw (+ (Point 0 1) ne)) (Point 2 0) (default) str))
+        ((Margin _)
+         Unit))
+      (match s
+        ((Line)
+         (set-cells sw se (default) +bar-h+))
+        ((Modeline str)
+         (set-cells sw se (default) +bar-h+)
+         (printb (points-bounds sw (+ (Point 0 1) se)) (Point 2 0) (default) str))
+        ((Margin _)
+         Unit))
+      (match e
+        ((Line)
+         (set-cells ne se (default) +bar-v+))
+        ((Modeline str)
+         (set-cells ne se (default) +bar-v+)
+         ;; TODO
+         ;;(printvb (points-bounds ne (+ (Point 1 0) se)) (Point 0 1) (default) str)
+         )
+        ((Margin _)
+         Unit))
+      (match w
+        ((Line)
+         (set-cells nw sw (default) +bar-v+))
+        ((Modeline str)
+         (set-cells nw sw (default) +bar-v+)
+         ;; TODO
+         ;;(printvb (points-bounds nw (+ (Point 1 0) sw)) (Point 0 1) (default) str)
+         )
+        ((Margin _)
+         Unit))
+      (when (and (line-edge-p n) (line-edge-p w)) (set-cell nw (default) +elbow-nw+))
+      (when (and (line-edge-p s) (line-edge-p w)) (set-cell sw (default) +elbow-sw+))
+      (when (and (line-edge-p n) (line-edge-p e)) (set-cell ne (default) +elbow-ne+))
+      (when (and (line-edge-p s) (line-edge-p e)) (set-cell se (default) +elbow-se+))
+      ))
 
   (declare border-inner-bounds (Border -> Bounds -> Bounds))
-  (define (border-inner-bounds border b)
-    (match border
-      ((LineBorder n s e w)
-       (border-inner-bounds
-        (MarginBorder (if n 1 0) (if s 1 0) (if e 1 0) (if w 1 0))
-        b))
-      ((MarginBorder n s e w)
-       (let (Bounds (Point x y) (Dimensions width height)) = b)
-       (Bounds
-        (Point (min (+ x width) (+ x w)) (min (+ y height) (+ y n)))
-        (Dimensions (max 2 (- width (+ e w)))
-                    (max 2 (- height (+ n s))))))))
+  (define (border-inner-bounds (Border n s e w) b)
+    (let (Bounds (Point x y) (Dimensions width height)) = b)
+    (Bounds
+     (Point (min (+ x width) (+ x (edge-width w)))
+            (min (+ y height) (+ y (edge-width n))))
+     (Dimensions (max 2 (- width (+ (edge-width e) (edge-width w))))
+                 (max 2 (- height (+ (edge-width n) (edge-width s)))))))
 
   (define-struct (Frame :t)
     (border Border)
@@ -96,7 +144,8 @@
       (let (Dimensions ow oh) = (compute-dimensions obj))
       (let mw = (math:div (max 0 (- w ow)) 2))
       (let mh = (math:div (max 0 (- h oh)) 2))
-      (draw bounds (Frame (MarginBorder mh mh mw mw) obj)))))
+      (let border = (Border (Margin mh) (Margin mh) (Margin mw) (Margin mw)))
+      (draw bounds (Frame border obj)))))
 
 (coalton-toplevel
   (define-struct (VSplit :split :top :bottom)
