@@ -12,6 +12,27 @@ Components implement the ~Drawable~ class with a function that accepts
 a bounds to draw within, and container components recursively call
 ~draw~ on their children.
 
+A proper "game loop" can be implemented as a state machine, with
+different input-handling methods in each state.  The provided example
+program shows how to read input:
+
+#+begin_src lisp
+  (define (game-loop examples)
+    ;; Render the example
+    ((list:car examples))
+    
+    ;; Await input
+    (match (tb:poll-event)
+      ;; Quit the game loop
+      ((Ok (tb:Event (tb::EventKey) _ _ #\q _ _ _ _))
+       Unit)
+      ;; Display a new example
+      ((Ok (tb:Event (tb::EventKey) _ _ #\Space _ _ _ _))
+       (game-loop (list:append (list:cdr examples) (make-list (list:car examples)))))
+      (_
+       (game-loop examples))))
+#+end_src
+
 * Examples
 
 Some basic examples are included in [[./example.lisp]], and you can try
