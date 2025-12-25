@@ -3,7 +3,7 @@
 
 * Overview
 
-I am just doodling around functional TUI ideas, I have built a small
+I am just doodling around with functional TUI ideas, I have built a small
 game with this for personal use.
 
 * Concepts
