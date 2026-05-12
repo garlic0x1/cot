@@ -36,7 +36,7 @@
                               (max 0
                                    (1- (the Integer (into (str:length (.content tb)))))))))))
 
-  (declare textbox-insert (TextBox -> Char -> TextBox))
+  (declare textbox-insert (TextBox * Char -> TextBox))
   (define (textbox-insert tb ch)
     (TextBox (.border tb)
              (str:concat (.content tb) (into ch))))
@@ -84,11 +84,11 @@
            (printb bounds
                    i
                    (if (== (.y i) (.cursor sel)) *selected-style* (default))
-                   (lisp String (iy choice-str)
+                   (lisp (-> String) (iy choice-str)
                      (cl:format cl:nil "~A> ~A" iy choice-str)))
            (f (unwrap (tail choices)) (+ i (Point 0 1))))
           ((None)
-           Unit)))))
+           (values))))))
 
   (define-instance (Centerable (Selection :t))
     (define (compute-dimensions sel)

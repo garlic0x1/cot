@@ -58,7 +58,7 @@
               ctors))))))
 
 (cl:defmacro lisp-tb-result (capture cl:&body body)
-  `(match (lisp Integer ,capture ,@body)
+  `(match (lisp (-> Integer) ,capture ,@body)
      (0 (Ok Unit))
      (x (match (the (Result EnumError TBError) (load x))
           ((Err _) (Err UnspecifiedErr))
@@ -190,7 +190,7 @@
     (y      Integer)))
 
 (coalton-toplevel
-  (declare init (Unit -> (Result TBError Unit)))
+  (declare init (Void -> (Result TBError Unit)))
   (define (init)
     (lisp-tb-result ()
       (tb:tb-init)))
@@ -200,66 +200,66 @@
     (lisp-tb-result (file)
       (tb:tb-init-file file)))
 
-  (declare shutdown (Unit -> (Result TBError Unit)))
+  (declare shutdown (Void -> (Result TBError Unit)))
   (define (shutdown)
     (lisp-tb-result ()
       (tb:tb-shutdown)))
 
-  (declare with-tb ((Unit -> Unit) -> Unit))
+  (declare with-tb ((Void -> Void) -> Void))
   (define (with-tb thunk)
-    (lisp Unit (thunk)
+    (lisp (-> Void) (thunk)
       (cl:unwind-protect
            (cl:progn
              (tb:tb-init)
-             (call-coalton-function thunk Unit))
+             (call-coalton-function thunk))
         (tb:tb-shutdown))))
 
-  (declare with-tb-tty (String -> (Unit -> Unit) -> Unit))
+  (declare with-tb-tty (String * (Void -> Void) -> Void))
   (define (with-tb-tty tty thunk)
-    (lisp Unit (tty thunk)
+    (lisp (-> Void) (tty thunk)
       (cl:unwind-protect
         (cl:progn
           (tb:tb-init-file tty)
           (call-coalton-function thunk Unit))
         (tb:tb-shutdown))))
 
-  (declare current-width (Unit -> Integer))
+  (declare current-width (Void -> Integer))
   (define (current-width)
-    (lisp Integer ()
+    (lisp (-> Integer) ()
       (cl:1- (tb:tb-width))))
 
-  (declare current-height (Unit -> Integer))
+  (declare current-height (Void -> Integer))
   (define (current-height)
-    (lisp Integer ()
+    (lisp (-> Integer) ()
       (cl:1- (tb:tb-height))))
 
-  (declare clear (Integer -> Integer -> (Result TBError Unit)))
+  (declare clear (Integer * Integer -> (Result TBError Unit)))
   (define (clear fg bg)
     (lisp-tb-result (fg bg)
       (tb:tb-set-clear-attrs fg bg)
       (tb:tb-clear)))
 
-  (declare present (Unit -> (Result TBError Unit)))
+  (declare present (Void -> (Result TBError Unit)))
   (define (present)
     (lisp-tb-result ()
       (tb:tb-present)))
 
-  (declare set-cursor (Integer -> Integer -> (Result TBError Unit)))
+  (declare set-cursor (Integer * Integer -> (Result TBError Unit)))
   (define (set-cursor x y)
     (lisp-tb-result (x y)
       (tb:tb-set-cursor x y)))
 
-  (declare hide-cursor (Unit -> (Result TBError Unit)))
+  (declare hide-cursor (Void -> (Result TBError Unit)))
   (define (hide-cursor)
     (lisp-tb-result ()
       (tb:tb-hide-cursor)))
 
-  (declare set-cell (Integer -> Integer -> Char -> UFix -> UFix -> (Result TBError Unit)))
+  (declare set-cell (Integer * Integer * Char * UFix * UFix -> (Result TBError Unit)))
   (define (set-cell x y ch fg bg)
     (lisp-tb-result (x y ch fg bg)
       (tb:tb-set-cell x y (cl:char-code ch) fg bg)))
 
-  (declare print (Integer -> Integer -> UFix -> UFix -> String -> (Result TBError Unit)))
+  (declare print (Integer * Integer * UFix * UFix * String -> (Result TBError Unit)))
   (define (print x y fg bg str)
     (lisp-tb-result (x y fg bg str)
       (tb:tb-print x y fg bg str)))
@@ -279,7 +279,7 @@
 
   (declare peek-event (Integer -> (Result TBError Event)))
   (define (peek-event timeout)
-    (lisp (Result TBError Event) (timeout)
+    (lisp (-> (Result TBError Event)) (timeout)
       (cffi:with-foreign-object (ev '(:struct tb:tb-event*))
         (cl:let ((status (tb:tb-peek-event* ev timeout)))
           (cl:if (cl:zerop status)
@@ -292,9 +292,9 @@
                               tb::x tb::y)))
                  (Err unspecifiederr))))))
 
-  (declare poll-event (Unit -> (Result TBError Event)))
+  (declare poll-event (Void -> (Result TBError Event)))
   (define (poll-event)
-    (lisp (Result TBError Event) ()
+    (lisp (-> (Result TBError Event)) ()
       (cffi:with-foreign-object (ev '(:struct tb:tb-event*))
         (cl:let ((status (tb:tb-poll-event* ev)))
           (cl:if (cl:zerop status)
