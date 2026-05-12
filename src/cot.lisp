@@ -69,7 +69,7 @@
          (set-cells nw ne (default) +bar-h+)
          (printb (points-bounds nw (+ (Point 0 1) ne)) (Point 2 0) (default) str))
         ((Margin _)
-         Unit))
+         (values)))
       (match s
         ((Line)
          (set-cells sw se (default) +bar-h+))
@@ -77,7 +77,7 @@
          (set-cells sw se (default) +bar-h+)
          (printb (points-bounds sw (+ (Point 0 1) se)) (Point 2 0) (default) str))
         ((Margin _)
-         Unit))
+         (values)))
       (match e
         ((Line)
          (set-cells ne se (default) +bar-v+))
@@ -87,7 +87,7 @@
          ;;(printvb (points-bounds ne (+ (Point 1 0) se)) (Point 0 1) (default) str)
          )
         ((Margin _)
-         Unit))
+         (values)))
       (match w
         ((Line)
          (set-cells nw sw (default) +bar-v+))
@@ -97,14 +97,14 @@
          ;;(printvb (points-bounds nw (+ (Point 1 0) sw)) (Point 0 1) (default) str)
          )
         ((Margin _)
-         Unit))
+         (values)))
       (when (and (line-edge-p n) (line-edge-p w)) (set-cell nw (default) +elbow-nw+))
       (when (and (line-edge-p s) (line-edge-p w)) (set-cell sw (default) +elbow-sw+))
       (when (and (line-edge-p n) (line-edge-p e)) (set-cell ne (default) +elbow-ne+))
       (when (and (line-edge-p s) (line-edge-p e)) (set-cell se (default) +elbow-se+))
       ))
 
-  (declare border-inner-bounds (Border -> Bounds -> Bounds))
+  (declare border-inner-bounds (Border * Bounds -> Bounds))
   (define (border-inner-bounds (Border n s e w) b)
     (let (Bounds (Point x y) (Dimensions width height)) = b)
     (Bounds

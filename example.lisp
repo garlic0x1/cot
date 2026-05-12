@@ -74,7 +74,8 @@
        (game-loop examples))))
 
   (define (main)
-    (game-loop (make-list example-1 example-2 example-3))))
+    (game-loop (make-list example-1 example-2 example-3))
+    (values)))
 
 (cl:defun entrypoint ()
-  (coalton (tb:with-tb main)))
+  (coalton (tb:with-tb main) Unit))

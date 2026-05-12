@@ -34,7 +34,7 @@
   ;;         0
   ;;         (1- x)))
 
-  (declare clamp (Ord :t => :t -> :t -> :t -> :t))
+  (declare clamp (Ord :t => :t * :t * :t -> :t))
   (define (clamp min-value x max-value)
     (max min-value (min max-value x))))
 

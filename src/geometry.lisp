@@ -80,7 +80,7 @@
     (let se = (Point (+ x w) (+ y h)))
     (Corners nw ne sw se))
 
-  (declare points-bounds (Point -> Point -> Bounds))
+  (declare points-bounds (Point * Point -> Bounds))
   (define (points-bounds (Point ax ay) (Point bx by))
     (let p = (Point (min ax bx) (min ay by)))
     (let d = (Dimensions (- (max ax bx) (.x p)) (- (max ay by) (.y p))))
@@ -101,7 +101,7 @@
       (True
        b)))
 
-  (declare contains? (Bounds -> Point -> Boolean))
+  (declare contains? (Bounds * Point -> Boolean))
   (define (contains? bounds point)
     "`bounds' inclusively contain `point'."
     (let (Point min-x min-y) = (.point bounds))
@@ -117,7 +117,7 @@
          (and (<= min-y y) (< y max-y))
          (and (< max-y y)  (<= y min-y)))))
 
-  (declare vsplit-ratio ((Into Integer :t) (Rational :t) => Bounds -> :t -> (Tuple Bounds Bounds)))
+  (declare vsplit-ratio ((Into Integer :t) (Rational :t) => Bounds * :t -> (Tuple Bounds Bounds)))
   (define (vsplit-ratio (= b (Bounds p (Dimensions w h))) ratio)
     (cond
       ;; Case #1:
@@ -151,7 +151,7 @@
        (let bot = (Bounds (+ p (Point 0 split)) (Dimensions w (- h split))))
        (Tuple top bot))))
 
-  (declare hsplit-ratio ((Into Integer :t) (Rational :t) => Bounds -> :t -> (Tuple Bounds Bounds)))
+  (declare hsplit-ratio ((Into Integer :t) (Rational :t) => Bounds * :t -> (Tuple Bounds Bounds)))
   (define (hsplit-ratio (= b (Bounds p (Dimensions w h))) ratio)
     (cond
       ;; Case #1:
@@ -187,7 +187,7 @@
 
   ;; TODO these are kinda broken in neg bounds
 
-  (declare vsplit-int (Bounds -> Integer -> (Tuple Bounds Bounds)))
+  (declare vsplit-int (Bounds * Integer -> (Tuple Bounds Bounds)))
   (define (vsplit-int b x)
     (let (= b (Bounds p (Dimensions w h))) = (positivize-bounds b))
     (cond
@@ -220,7 +220,7 @@
        (let bot = (Bounds (+ p (Point 0 split)) (Dimensions w (- h split))))
        (Tuple top bot))))
 
-  (declare hsplit-int (Bounds -> Integer -> (Tuple Bounds Bounds)))
+  (declare hsplit-int (Bounds * Integer -> (Tuple Bounds Bounds)))
   (define (hsplit-int b x)
     (let (= b (Bounds p (Dimensions w h))) = (positivize-bounds b))
     (cond
